@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바리스브루 메뉴 조합</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --brown-dark: #3E2723;
+  --brown-mid: #6D4C41;
+  --cream: #FFF8F0;
+  --cream-dark: #F0E6D3;
+  --green: #2E7D32;
+  --green-light: #E8F5E9;
+  --blue: #1565C0;
+  --blue-light: #E3F2FD;
+  --yellow-light: #FFF9C4;
+  --yellow-dark: #856910;
+  --orange-light: #FFF3E8;
+  --orange-dark: #7B4F3E;
+  --red: #C62828;
+  --border: #DDD0C0;
+  --text: #2C1A12;
+  --text-muted: #8D7060;
+  --bg: #FAF6F0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+header { background: var(--brown-dark); color: #fff; padding: 20px 32px 16px; }
+header h1 { font-size: 20px; font-weight: 700; }
+header p  { font-size: 12px; opacity: 0.6; margin-top: 2px; }
+.nav { background: var(--brown-mid); display: flex; overflow-x: auto; }
+.nav-btn {
+  font-family: 'Noto Sans KR', sans-serif; font-size: 12px; font-weight: 500;
+  padding: 12px 18px; background: transparent; border: none;
+  color: rgba(255,255,255,0.6); cursor: pointer; border-bottom: 3px solid transparent;
+  transition: all 0.15s; white-space: nowrap;
+}
+.nav-btn:hover { color: #fff; }
+.nav-btn.active { color: #fff; border-bottom-color: #FFCC80; }
+.page { display: none; }
+.page.active { display: block; }
+.container { max-width: 860px; margin: 0 auto; padding: 22px 20px 60px; }
+.card { background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+.card-header { padding: 13px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.card-title { font-size: 13px; font-weight: 700; }
+.powder-color { color: var(--green); }
+.syrup-color  { color: var(--blue); }
+.menu-color   { color: var(--brown-mid); }
+.card-body { padding: 14px 18px; }
+.selector-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+.slots { display: grid; gap: 8px; }
+.slots-4 { grid-template-columns: 1fr 1fr; }
+.slots-8 { grid-template-columns: 1fr 1fr; }
+.slot-wrap { display: flex; flex-direction: column; gap: 3px; }
+.slot-label { font-size: 11px; color: var(--text-muted); }
+select {
+  width: 100%; height: 34px; font-size: 12px; font-family: 'Noto Sans KR', sans-serif;
+  padding: 0 28px 0 8px; border: 1px solid var(--border); border-radius: 7px;
+  background: var(--cream) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238D7060'/%3E%3C/svg%3E") no-repeat right 8px center;
+  color: var(--text); cursor: pointer; appearance: none;
+}
+select:focus { outline: none; border-color: var(--brown-mid); }
+.stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.stat-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 13px; text-align: center; }
+.stat-num { font-size: 28px; font-weight: 700; line-height: 1; }
+.stat-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.stat-total .stat-num  { color: var(--brown-dark); }
+.stat-coffee .stat-num { color: var(--orange-dark); }
+.stat-non .stat-num    { color: var(--blue); }
+.tabs { display: flex; gap: 6px; }
+.tab {
+  font-size: 12px; font-family: 'Noto Sans KR', sans-serif; padding: 5px 14px;
+  border-radius: 99px; border: 1px solid var(--border); background: transparent;
+  color: var(--text-muted); cursor: pointer; font-weight: 500; transition: all 0.15s;
+}
+.tab:hover { background: var(--cream); }
+.tab.active { background: var(--brown-dark); color: #fff; border-color: var(--brown-dark); }
+.menu-list { padding: 8px; }
+.menu-row { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; transition: background 0.1s; }
+.menu-row:hover { background: var(--cream); }
+.menu-no   { font-size: 11px; color: var(--text-muted); min-width: 24px; text-align: right; flex-shrink: 0; }
+.menu-name { font-size: 13px; font-weight: 500; flex: 1; }
+.tags { display: flex; gap: 4px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+.tag { font-size: 10px; padding: 2px 8px; border-radius: 99px; font-weight: 500; white-space: nowrap; }
+.tag-coffee  { background: var(--orange-light); color: var(--orange-dark); }
+.tag-non     { background: var(--blue-light);   color: var(--blue); }
+.tag-powder  { background: var(--green-light);  color: var(--green); }
+.tag-syrup   { background: var(--yellow-light); color: var(--yellow-dark); }
+.divider     { height: 1px; background: var(--border); margin: 2px 10px; }
+.empty { text-align: center; padding: 36px 20px; color: var(--text-muted); font-size: 13px; line-height: 1.8; }
+
+/* 관리 */
+.chip-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; min-height: 34px; align-items: center; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px 5px 12px; border-radius: 99px; font-size: 12px; font-weight: 500; border: 1px solid; }
+.chip-powder { background: var(--green-light); color: var(--green);  border-color: #A5D6A7; }
+.chip-syrup  { background: var(--blue-light);  color: var(--blue);   border-color: #90CAF9; }
+.chip-del { width:16px;height:16px;border-radius:50%;border:none;background:rgba(0,0,0,0.12);color:inherit;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;padding:0;font-family:inherit; }
+.chip-del:hover { background: rgba(0,0,0,0.25); }
+.add-row { display: flex; gap: 8px; }
+.add-row input { flex:1;height:36px;padding:0 12px;font-size:13px;font-family:'Noto Sans KR',sans-serif;border:1px solid var(--border);border-radius:8px;background:var(--cream);color:var(--text); }
+.add-row input:focus { outline:none;border-color:var(--brown-mid); }
+.btn { height:36px;padding:0 16px;border-radius:8px;border:none;font-size:12px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;white-space:nowrap;transition:opacity 0.15s; }
+.btn:hover { opacity:0.85; }
+.btn-green { background:var(--green);color:#fff; }
+.btn-blue  { background:var(--blue);color:#fff; }
+.btn-brown { background:var(--brown-dark);color:#fff; }
+.btn-red   { background:var(--red);color:#fff; }
+.btn-sm    { height:30px;padding:0 12px;font-size:11px; }
+.menu-table { width:100%;border-collapse:collapse;font-size:12px; }
+.menu-table th { text-align:left;padding:8px 10px;background:var(--cream-dark);color:var(--text-muted);font-size:11px;font-weight:700;border-bottom:1px solid var(--border); }
+.menu-table td { padding:9px 10px;border-bottom:1px solid #F0E6D3;vertical-align:middle; }
+.menu-table tr:last-child td { border-bottom:none; }
+.menu-table tr:hover td { background:var(--cream); }
+.cat-badge { font-size:10px;padding:2px 8px;border-radius:99px;font-weight:500; }
+.add-menu-grid { display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:end; }
+.field-wrap label { font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px; }
+.field-wrap input,.field-wrap select { width:100%;height:34px;font-size:12px;font-family:'Noto Sans KR',sans-serif;padding:0 8px;border:1px solid var(--border);border-radius:7px;background:var(--cream);color:var(--text);appearance:none; }
+.field-wrap select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238D7060'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;padding-right:22px; }
+.field-wrap input:focus,.field-wrap select:focus { outline:none;border-color:var(--brown-mid); }
+.notice { font-size:11px;color:var(--text-muted);margin-top:8px; }
+
+/* 페이지3 - 메뉴선택 재료찾기 */
+.reverse-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.menu-checklist { display: flex; flex-direction: column; gap: 2px; max-height: 480px; overflow-y: auto; padding: 6px; }
+.menu-check-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 8px; cursor: pointer;
+  transition: background 0.1s; user-select: none;
+}
+.menu-check-row:hover { background: var(--cream); }
+.menu-check-row.selected { background: var(--cream-dark); }
+.menu-check-box {
+  width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid var(--border);
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; transition: all 0.15s; background: #fff;
+}
+.menu-check-row.selected .menu-check-box { background: var(--brown-dark); border-color: var(--brown-dark); color: #fff; }
+.check-no   { font-size: 11px; color: var(--text-muted); min-width: 22px; text-align: right; flex-shrink: 0; }
+.check-name { font-size: 13px; font-weight: 500; flex: 1; }
+.check-tags { display: flex; gap: 3px; flex-shrink: 0; }
+
+.result-panel { position: sticky; top: 20px; }
+.selected-count { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+.selected-count strong { color: var(--brown-dark); }
+.ingredient-section { margin-bottom: 14px; }
+.ingredient-section-title { font-size: 12px; font-weight: 700; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.ingredient-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid #F5EDE0; }
+.ingredient-row:last-child { border-bottom: none; }
+.ingredient-num { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.ingredient-name { font-size: 13px; font-weight: 500; flex: 1; }
+.ingredient-used-by { font-size: 10px; color: var(--text-muted); }
+.none-msg { font-size: 12px; color: var(--text-muted); padding: 8px 0; }
+.clear-btn { font-size: 11px; font-family: 'Noto Sans KR', sans-serif; padding: 4px 12px; border-radius: 99px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; }
+.clear-btn:hover { background: var(--cream); }
+
+@media (max-width: 640px) {
+  .selector-row { grid-template-columns: 1fr; }
+  .stats-row { gap: 8px; }
+  .stat-num { font-size: 22px; }
+  .add-menu-grid { grid-template-columns: 1fr 1fr; }
+  .tags { display: none; }
+  .reverse-layout { grid-template-columns: 1fr; }
+  .result-panel { position: static; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>바리스브루 메뉴 조합</h1>
+  <p>보유한 재료로 만들 수 있는 메뉴를 확인하세요</p>
+</header>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="showPage('v35',this)">바리스브루 v3.5</button>
+  <button class="nav-btn" onclick="showPage('v40',this)">바리스브루 v4.0</button>
+  <button class="nav-btn" onclick="showPage('reverse',this)">메뉴선택 재료찾기</button>
+  <button class="nav-btn" onclick="showPage('manage',this)">⚙️ 재료·메뉴 관리</button>
+</div>
+
+<!-- v3.5 -->
+<div id="page-v35" class="page active">
+  <div class="container">
+    <div class="selector-row">
+      <div class="card">
+        <div class="card-header"><span class="card-title powder-color">🌿 보유 파우더 (최대 4종)</span></div>
+        <div class="card-body"><div class="slots slots-4" id="v35-powder-slots"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title syrup-color">🍯 보유 시럽 (최대 4종)</span></div>
+        <div class="card-body"><div class="slots slots-4" id="v35-syrup-slots"></div></div>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card stat-total"><div class="stat-num" id="v35-cnt-total">-</div><div class="stat-label">전체 가능 메뉴</div></div>
+      <div class="stat-card stat-coffee"><div class="stat-num" id="v35-cnt-coffee">-</div><div class="stat-label">커피 메뉴</div></div>
+      <div class="stat-card stat-non"><div class="stat-num" id="v35-cnt-non">-</div><div class="stat-label">논커피 메뉴</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="tabs">
+          <button class="tab active" onclick="setTab('v35','all',this)">전체</button>
+          <button class="tab" onclick="setTab('v35','커피',this)">커피</button>
+          <button class="tab" onclick="setTab('v35','논커피',this)">논커피</button>
+        </div>
+      </div>
+      <div class="menu-list" id="v35-menu-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- v4.0 -->
+<div id="page-v40" class="page">
+  <div class="container">
+    <div class="selector-row">
+      <div class="card">
+        <div class="card-header"><span class="card-title powder-color">🌿 보유 파우더 (최대 8종)</span></div>
+        <div class="card-body"><div class="slots slots-8" id="v40-powder-slots"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title syrup-color">🍯 보유 시럽 (최대 8종)</span></div>
+        <div class="card-body"><div class="slots slots-8" id="v40-syrup-slots"></div></div>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card stat-total"><div class="stat-num" id="v40-cnt-total">-</div><div class="stat-label">전체 가능 메뉴</div></div>
+      <div class="stat-card stat-coffee"><div class="stat-num" id="v40-cnt-coffee">-</div><div class="stat-label">커피 메뉴</div></div>
+      <div class="stat-card stat-non"><div class="stat-num" id="v40-cnt-non">-</div><div class="stat-label">논커피 메뉴</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="tabs">
+          <button class="tab active" onclick="setTab('v40','all',this)">전체</button>
+          <button class="tab" onclick="setTab('v40','커피',this)">커피</button>
+          <button class="tab" onclick="setTab('v40','논커피',this)">논커피</button>
+        </div>
+      </div>
+      <div class="menu-list" id="v40-menu-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 메뉴선택 재료찾기 -->
+<div id="page-reverse" class="page">
+  <div class="container">
+    <div class="reverse-layout">
+      <!-- 왼쪽: 메뉴 목록 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title menu-color">☕ 메뉴 선택</span>
+          <button class="clear-btn" onclick="clearSelection()">전체 해제</button>
+        </div>
+        <div class="menu-checklist" id="reverse-checklist"></div>
+      </div>
+      <!-- 오른쪽: 재료 결과 -->
+      <div class="result-panel">
+        <div class="card">
+          <div class="card-header"><span class="card-title powder-color">🌿 필요한 파우더</span></div>
+          <div class="card-body" id="result-powder"><div class="none-msg">메뉴를 선택해주세요</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title syrup-color">🍯 필요한 시럽</span></div>
+          <div class="card-body" id="result-syrup"><div class="none-msg">메뉴를 선택해주세요</div></div>
+        </div>
+        <div id="selected-summary" style="text-align:center;font-size:12px;color:var(--text-muted);padding:4px 0;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 재료·메뉴 관리 -->
+<div id="page-manage" class="page">
+  <div class="container">
+    <div class="card">
+      <div class="card-header"><span class="card-title powder-color">🌿 파우더 관리</span></div>
+      <div class="card-body">
+        <div class="chip-list" id="powder-chips"></div>
+        <div class="add-row">
+          <input type="text" id="new-powder" placeholder="새 파우더 이름 입력" onkeydown="if(event.key==='Enter')addPowder()">
+          <button class="btn btn-green" onclick="addPowder()">+ 추가</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title syrup-color">🍯 시럽 관리</span></div>
+      <div class="card-body">
+        <div class="chip-list" id="syrup-chips"></div>
+        <div class="add-row">
+          <input type="text" id="new-syrup" placeholder="새 시럽 이름 입력" onkeydown="if(event.key==='Enter')addSyrup()">
+          <button class="btn btn-blue" onclick="addSyrup()">+ 추가</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title menu-color">☕ 메뉴 관리</span></div>
+      <div class="card-body">
+        <div style="background:var(--cream);border-radius:10px;padding:14px;margin-bottom:16px;">
+          <div style="font-size:12px;font-weight:700;color:var(--brown-mid);margin-bottom:10px;">새 메뉴 추가</div>
+          <div class="add-menu-grid">
+            <div class="field-wrap"><label>메뉴명</label><input type="text" id="new-menu-name" placeholder="예) 라벤더 라떼 (HOT/ICE)"></div>
+            <div class="field-wrap"><label>카테고리</label><select id="new-menu-cat"><option value="커피">커피</option><option value="논커피">논커피</option></select></div>
+            <div class="field-wrap"><label>파우더</label><select id="new-menu-powder"></select></div>
+            <div class="field-wrap"><label>시럽</label><select id="new-menu-syrup"></select></div>
+            <div class="field-wrap"><label style="visibility:hidden">_</label><button class="btn btn-brown" onclick="addMenu()" style="height:34px;width:100%">+ 추가</button></div>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="menu-table">
+            <thead><tr>
+              <th style="width:36px">No.</th><th>메뉴명</th>
+              <th style="width:80px">카테고리</th><th style="width:100px">파우더</th>
+              <th style="width:100px">시럽</th><th style="width:52px"></th>
+            </tr></thead>
+            <tbody id="menu-tbody"></tbody>
+          </table>
+        </div>
+        <p class="notice">* 변경사항은 이 기기 브라우저에 자동 저장됩니다.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_POWDERS = ['말차','미숫가루','밀크파우더','아이스티','초코파우더','허니자몽티'];
+const DEFAULT_SYRUPS  = ['바닐라','블랙티','오렌지','허니','헤이즐넛'];
+const DEFAULT_MENUS = [
+  {no:1, cat:'커피',  name:'아메리카노 (HOT/ICE)',             powder:'-',       syrup:'-'},
+  {no:2, cat:'커피',  name:'하프샷 아메리카노 (HOT/ICE)',      powder:'-',       syrup:'-'},
+  {no:3, cat:'커피',  name:'더블샷 아메리카노 (HOT/ICE)',      powder:'-',       syrup:'-'},
+  {no:4, cat:'커피',  name:'화이트 아메리카노 (HOT/ICE)',      powder:'밀크파우더', syrup:'-'},
+  {no:5, cat:'커피',  name:'헤이즐넛 아메리카노 (HOT/ICE)',   powder:'-',       syrup:'헤이즐넛'},
+  {no:6, cat:'커피',  name:'스위트 허니 아메리카노 (HOT/ICE)', powder:'-',       syrup:'허니'},
+  {no:7, cat:'커피',  name:'후르츠카페인 (ICE)',               powder:'아이스티', syrup:'오렌지'},
+  {no:8, cat:'커피',  name:'아샷추 (ICE)',                     powder:'아이스티', syrup:'-'},
+  {no:9, cat:'커피',  name:'카페 라떼 (HOT/ICE)',              powder:'밀크파우더', syrup:'-'},
+  {no:10,cat:'커피',  name:'바닐라 라떼 (HOT/ICE)',            powder:'밀크파우더', syrup:'바닐라'},
+  {no:11,cat:'커피',  name:'카페 모카 (HOT/ICE)',              powder:'초코파우더', syrup:'-'},
+  {no:12,cat:'커피',  name:'밀크티 라떼 (HOT/ICE)',            powder:'밀크파우더', syrup:'블랙티'},
+  {no:13,cat:'커피',  name:'헤이즐넛 카페라떼 (HOT/ICE)',     powder:'밀크파우더', syrup:'헤이즐넛'},
+  {no:14,cat:'커피',  name:'시그니처 말차 샷 라떼 (HOT/ICE)', powder:'말차',     syrup:'-'},
+  {no:15,cat:'커피',  name:'헤이즐넛모카 (HOT/ICE)',           powder:'초코파우더', syrup:'헤이즐넛'},
+  {no:16,cat:'커피',  name:'바닐라모카 (HOT/ICE)',             powder:'초코파우더', syrup:'바닐라'},
+  {no:17,cat:'커피',  name:'스위트 허니 라떼 (HOT/ICE)',       powder:'밀크파우더', syrup:'허니'},
+  {no:18,cat:'논커피',name:'밀크티 (HOT/ICE)',                 powder:'밀크파우더', syrup:'블랙티'},
+  {no:19,cat:'논커피',name:'초코 라떼 (HOT/ICE)',              powder:'초코파우더', syrup:'-'},
+  {no:20,cat:'논커피',name:'바닐라 밀크 (HOT/ICE)',            powder:'밀크파우더', syrup:'바닐라'},
+  {no:21,cat:'논커피',name:'든든 미숫가루 (ICE)',               powder:'미숫가루',  syrup:'-'},
+  {no:22,cat:'논커피',name:'제주 유기농 말차 라떼 (HOT/ICE)',  powder:'말차',     syrup:'-'},
+  {no:23,cat:'논커피',name:'초코바닐라밀크 (HOT/ICE)',          powder:'초코파우더', syrup:'바닐라'},
+  {no:24,cat:'논커피',name:'헤이즐넛 밀크 (HOT/ICE)',           powder:'밀크파우더', syrup:'헤이즐넛'},
+  {no:25,cat:'논커피',name:'헤이즐넛 초코밀크 (HOT/ICE)',       powder:'초코파우더', syrup:'헤이즐넛'},
+  {no:26,cat:'논커피',name:'복숭아 아이스티 (ICE)',             powder:'아이스티',  syrup:'-'},
+  {no:27,cat:'논커피',name:'블랙 아이스티 (ICE)',               powder:'아이스티',  syrup:'블랙티'},
+  {no:28,cat:'논커피',name:'오렌지 아이스티 (ICE)',             powder:'아이스티',  syrup:'오렌지'},
+  {no:29,cat:'논커피',name:'허니자몽티 (HOT/ICE)',              powder:'허니자몽티', syrup:'-'},
+];
+
+const DEFAULT_SEL_POWDERS = ['밀크파우더','아이스티','초코파우더'];
+const DEFAULT_SEL_SYRUPS  = ['바닐라','블랙티','오렌지'];
+
+const STATE = { powders:[], syrups:[], menus:[], tabs:{v35:'all',v40:'all'}, selected: new Set() };
+
+function load() {
+  try {
+    const p=localStorage.getItem('cafe_powders');
+    const s=localStorage.getItem('cafe_syrups');
+    const m=localStorage.getItem('cafe_menus');
+    STATE.powders = p ? JSON.parse(p) : [...DEFAULT_POWDERS];
+    STATE.syrups  = s ? JSON.parse(s) : [...DEFAULT_SYRUPS];
+    STATE.menus   = m ? JSON.parse(m) : DEFAULT_MENUS.map(x=>({...x}));
+  } catch(e) {
+    STATE.powders=[...DEFAULT_POWDERS]; STATE.syrups=[...DEFAULT_SYRUPS];
+    STATE.menus=DEFAULT_MENUS.map(x=>({...x}));
+  }
+}
+function save() {
+  try {
+    localStorage.setItem('cafe_powders',JSON.stringify(STATE.powders));
+    localStorage.setItem('cafe_syrups', JSON.stringify(STATE.syrups));
+    localStorage.setItem('cafe_menus',  JSON.stringify(STATE.menus));
+  } catch(e) {}
+}
+load();
+
+// ── 페이지 전환 ──
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='v35')    renderFind('v35');
+  if(id==='v40')    renderFind('v40');
+  if(id==='reverse'){ buildChecklist(); renderIngredients(); }
+  if(id==='manage') renderManage();
+}
+
+// ── v3.5 / v4.0 ──
+function buildSlots(ver, count) {
+  buildSlotGroup(`${ver}-powder-slots`, STATE.powders, '파우더', count, DEFAULT_SEL_POWDERS, ver);
+  buildSlotGroup(`${ver}-syrup-slots`,  STATE.syrups,  '시럽',   count, DEFAULT_SEL_SYRUPS,  ver);
+}
+function buildSlotGroup(cid, items, label, count, defaults, ver) {
+  const el=document.getElementById(cid); el.innerHTML='';
+  for(let i=0;i<count;i++){
+    const w=document.createElement('div'); w.className='slot-wrap';
+    const l=document.createElement('div'); l.className='slot-label'; l.textContent=`${label} ${i+1}`;
+    const s=document.createElement('select');
+    const d=document.createElement('option'); d.value=''; d.textContent='선택'; s.appendChild(d);
+    items.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o);});
+    if(defaults[i]) s.value=defaults[i];
+    s.addEventListener('change',()=>renderFind(ver));
+    w.appendChild(l); w.appendChild(s); el.appendChild(w);
+  }
+}
+function getSelected(cid) { return [...document.querySelectorAll(`#${cid} select`)].map(s=>s.value).filter(Boolean); }
+function canMake(m,ps,ss) { return (m.powder==='-'||ps.includes(m.powder))&&(m.syrup==='-'||ss.includes(m.syrup)); }
+function setTab(ver,t,el) {
+  STATE.tabs[ver]=t;
+  document.getElementById('page-'+ver).querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderFind(ver);
+}
+function renderFind(ver) {
+  const ps=getSelected(`${ver}-powder-slots`), ss=getSelected(`${ver}-syrup-slots`);
+  const hasAny=ps.length>0||ss.length>0;
+  const avail=STATE.menus.filter(m=>canMake(m,ps,ss));
+  const cCnt=avail.filter(m=>m.cat==='커피').length;
+  const nCnt=avail.filter(m=>m.cat==='논커피').length;
+  document.getElementById(`${ver}-cnt-total`).textContent  = hasAny?avail.length:'-';
+  document.getElementById(`${ver}-cnt-coffee`).textContent = hasAny?cCnt:'-';
+  document.getElementById(`${ver}-cnt-non`).textContent    = hasAny?nCnt:'-';
+  const tab=STATE.tabs[ver]||'all';
+  const filtered=tab==='all'?avail:avail.filter(m=>m.cat===tab);
+  const list=document.getElementById(`${ver}-menu-list`);
+  if(!hasAny){list.innerHTML='<div class="empty">파우더 또는 시럽을 선택하면<br>만들 수 있는 메뉴가 표시됩니다.</div>';return;}
+  if(!filtered.length){list.innerHTML='<div class="empty">해당 조합으로 만들 수 있는 메뉴가 없습니다.</div>';return;}
+  list.innerHTML=filtered.map((m,i)=>{
+    const tags=[];
+    tags.push(`<span class="tag ${m.cat==='커피'?'tag-coffee':'tag-non'}">${m.cat}</span>`);
+    if(m.powder!=='-') tags.push(`<span class="tag tag-powder">${m.powder}</span>`);
+    if(m.syrup !=='-') tags.push(`<span class="tag tag-syrup">${m.syrup}</span>`);
+    return `${i>0?'<div class="divider"></div>':''}<div class="menu-row">
+      <span class="menu-no">${m.no}</span>
+      <span class="menu-name">${m.name}</span>
+      <div class="tags">${tags.join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── 메뉴선택 재료찾기 ──
+function buildChecklist() {
+  const el=document.getElementById('reverse-checklist'); el.innerHTML='';
+  STATE.menus.forEach(m=>{
+    const row=document.createElement('div');
+    row.className='menu-check-row'+(STATE.selected.has(m.no)?' selected':'');
+    row.onclick=()=>toggleMenu(m.no);
+    const chk=`<div class="menu-check-box">${STATE.selected.has(m.no)?'✓':''}</div>`;
+    const catCls=m.cat==='커피'?'tag-coffee':'tag-non';
+    const tags=`<div class="check-tags"><span class="tag ${catCls}">${m.cat}</span></div>`;
+    row.innerHTML=`${chk}<span class="check-no">${m.no}</span><span class="check-name">${m.name}</span>${tags}`;
+    el.appendChild(row);
+  });
+}
+function toggleMenu(no) {
+  if(STATE.selected.has(no)) STATE.selected.delete(no);
+  else STATE.selected.add(no);
+  buildChecklist();
+  renderIngredients();
+}
+function clearSelection() {
+  STATE.selected.clear();
+  buildChecklist();
+  renderIngredients();
+}
+function renderIngredients() {
+  const selMenus = STATE.menus.filter(m=>STATE.selected.has(m.no));
+  const summary = document.getElementById('selected-summary');
+
+  if(selMenus.length===0){
+    document.getElementById('result-powder').innerHTML='<div class="none-msg">메뉴를 선택해주세요</div>';
+    document.getElementById('result-syrup').innerHTML='<div class="none-msg">메뉴를 선택해주세요</div>';
+    summary.textContent='';
+    return;
+  }
+  summary.textContent=`${selMenus.length}개 메뉴 선택됨`;
+
+  // 파우더 집계: { 파우더명: [메뉴명, ...] }
+  const powderMap={}, syrupMap={};
+  selMenus.forEach(m=>{
+    if(m.powder!=='-'){
+      if(!powderMap[m.powder]) powderMap[m.powder]=[];
+      powderMap[m.powder].push(m.name);
+    }
+    if(m.syrup!=='-'){
+      if(!syrupMap[m.syrup]) syrupMap[m.syrup]=[];
+      syrupMap[m.syrup].push(m.name);
+    }
+  });
+
+  const pKeys=Object.keys(powderMap);
+  const sKeys=Object.keys(syrupMap);
+
+  document.getElementById('result-powder').innerHTML = pKeys.length===0
+    ? '<div class="none-msg">선택한 메뉴에 파우더가 필요 없습니다</div>'
+    : pKeys.map((p,i)=>`
+        <div class="ingredient-row">
+          <div class="ingredient-num" style="background:var(--green-light);color:var(--green)">${i+1}</div>
+          <div style="flex:1">
+            <div class="ingredient-name">${p}</div>
+            <div class="ingredient-used-by">${powderMap[p].join(', ')}</div>
+          </div>
+        </div>`).join('');
+
+  document.getElementById('result-syrup').innerHTML = sKeys.length===0
+    ? '<div class="none-msg">선택한 메뉴에 시럽이 필요 없습니다</div>'
+    : sKeys.map((s,i)=>`
+        <div class="ingredient-row">
+          <div class="ingredient-num" style="background:var(--yellow-light);color:var(--yellow-dark)">${i+1}</div>
+          <div style="flex:1">
+            <div class="ingredient-name">${s}</div>
+            <div class="ingredient-used-by">${syrupMap[s].join(', ')}</div>
+          </div>
+        </div>`).join('');
+}
+
+// ── 관리 ──
+function renderManage() {
+  renderChips('powder-chips', STATE.powders, 'chip-powder', 'delPowder');
+  renderChips('syrup-chips',  STATE.syrups,  'chip-syrup',  'delSyrup');
+  fillSelect('new-menu-powder', STATE.powders, '없음 (-)');
+  fillSelect('new-menu-syrup',  STATE.syrups,  '없음 (-)');
+  renderMenuTable();
+}
+function renderChips(cid, items, cls, fnName) {
+  document.getElementById(cid).innerHTML = items.length===0
+    ? '<span style="font-size:12px;color:var(--text-muted)">없음</span>'
+    : items.map((v,i)=>`<span class="chip ${cls}">${v}<button class="chip-del" onclick="${fnName}(${i})">×</button></span>`).join('');
+}
+function fillSelect(id, items, ph) {
+  const s=document.getElementById(id); s.innerHTML='';
+  const d=document.createElement('option'); d.value='-'; d.textContent=ph; s.appendChild(d);
+  items.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o);});
+}
+function renderMenuTable() {
+  document.getElementById('menu-tbody').innerHTML=STATE.menus.map((m,i)=>{
+    const bs=m.cat==='커피'?'background:var(--orange-light);color:var(--orange-dark)':'background:var(--blue-light);color:var(--blue)';
+    return `<tr>
+      <td style="color:var(--text-muted)">${m.no}</td><td>${m.name}</td>
+      <td><span class="cat-badge" style="${bs}">${m.cat}</span></td>
+      <td>${m.powder==='-'?'<span style="color:var(--text-muted)">-</span>':`<span class="tag tag-powder">${m.powder}</span>`}</td>
+      <td>${m.syrup ==='-'?'<span style="color:var(--text-muted)">-</span>':`<span class="tag tag-syrup">${m.syrup}</span>`}</td>
+      <td><button class="btn btn-red btn-sm" onclick="delMenu(${i})">삭제</button></td>
+    </tr>`;
+  }).join('');
+}
+function addPowder() {
+  const inp=document.getElementById('new-powder'),v=inp.value.trim();
+  if(!v) return;
+  if(STATE.powders.includes(v)){alert('이미 있는 파우더입니다.');return;}
+  STATE.powders.push(v);save();inp.value='';
+  renderManage();buildSlots('v35',4);buildSlots('v40',8);
+}
+function delPowder(i) {
+  if(!confirm(`'${STATE.powders[i]}' 파우더를 삭제할까요?`)) return;
+  STATE.powders.splice(i,1);save();
+  renderManage();buildSlots('v35',4);buildSlots('v40',8);
+}
+function addSyrup() {
+  const inp=document.getElementById('new-syrup'),v=inp.value.trim();
+  if(!v) return;
+  if(STATE.syrups.includes(v)){alert('이미 있는 시럽입니다.');return;}
+  STATE.syrups.push(v);save();inp.value='';
+  renderManage();buildSlots('v35',4);buildSlots('v40',8);
+}
+function delSyrup(i) {
+  if(!confirm(`'${STATE.syrups[i]}' 시럽을 삭제할까요?`)) return;
+  STATE.syrups.splice(i,1);save();
+  renderManage();buildSlots('v35',4);buildSlots('v40',8);
+}
+function addMenu() {
+  const name=document.getElementById('new-menu-name').value.trim();
+  if(!name){alert('메뉴명을 입력해주세요.');return;}
+  const cat=document.getElementById('new-menu-cat').value;
+  const powder=document.getElementById('new-menu-powder').value;
+  const syrup=document.getElementById('new-menu-syrup').value;
+  const maxNo=STATE.menus.reduce((a,m)=>Math.max(a,m.no),0);
+  STATE.menus.push({no:maxNo+1,cat,name,powder,syrup});
+  save();document.getElementById('new-menu-name').value='';renderManage();
+}
+function delMenu(i) {
+  if(!confirm(`'${STATE.menus[i].name}' 메뉴를 삭제할까요?`)) return;
+  STATE.menus.splice(i,1);save();renderManage();
+}
+
+// ── 초기화 ──
+buildSlots('v35',4);
+buildSlots('v40',8);
+renderFind('v35');
+</script>
+</body>
+</html>
