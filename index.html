@@ -236,8 +236,9 @@ select:focus{outline:none;border-color:var(--brown-mid)}
         <div class="card-body"><div class="syrup-tiles" id="v35-syrup-tiles"></div></div>
       </div>
     </div>
-    <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
-      <button class="save-receipt-btn" onclick="printMenuList('v35')">📥 엑셀로 저장</button>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px">
+      <button class="save-receipt-btn" style="background:#5D8A3C" onclick="saveExcel('v35')">📥 엑셀 저장</button>
+      <button class="save-receipt-btn" onclick="saveJpg('v35')">📷 JPG 저장</button>
     </div>
     <div class="stats-row" style="grid-template-columns:repeat(3,1fr)">
       <div class="stat-card stat-total"><div class="stat-num" id="v35-cnt-total">-</div><div class="stat-label">전체 가능 메뉴</div></div>
@@ -274,8 +275,9 @@ select:focus{outline:none;border-color:var(--brown-mid)}
       <div class="card-header"><span class="card-title cup-color">🍵 보유 컵 종류 (최대 4종)</span></div>
       <div class="card-body"><div class="slots slots-4" id="vadd-cup-slots"></div></div>
     </div>
-    <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
-      <button class="save-receipt-btn" onclick="printMenuList('vadd')">📥 엑셀로 저장</button>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px">
+      <button class="save-receipt-btn" style="background:#5D8A3C" onclick="saveExcel('vadd')">📥 엑셀 저장</button>
+      <button class="save-receipt-btn" onclick="saveJpg('vadd')">📷 JPG 저장</button>
     </div>
     <div class="stats-row">
       <div class="stat-card stat-total"><div class="stat-num" id="vadd-cnt-total">-</div><div class="stat-label">전체 가능 메뉴</div></div>
@@ -314,8 +316,9 @@ select:focus{outline:none;border-color:var(--brown-mid)}
       <div class="card-header"><span class="card-title cup-color">🍵 보유 컵 종류 (최대 4종)</span></div>
       <div class="card-body"><div class="slots slots-4" id="v40-cup-slots"></div></div>
     </div>
-    <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
-      <button class="save-receipt-btn" onclick="printMenuList('v40')">📥 엑셀로 저장</button>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px">
+      <button class="save-receipt-btn" style="background:#5D8A3C" onclick="saveExcel('v40')">📥 엑셀 저장</button>
+      <button class="save-receipt-btn" onclick="saveJpg('v40')">📷 JPG 저장</button>
     </div>
     <div class="stats-row">
       <div class="stat-card stat-total"><div class="stat-num" id="v40-cnt-total">-</div><div class="stat-label">전체 가능 메뉴</div></div>
@@ -427,7 +430,7 @@ const DEFAULT_MENUS = [
   {no:15,cat:'커피',  name:'헤이즐넛모카 (HOT/ICE)',            powder:'초코파우더', syrup:'헤이즐넛',   cup:'-', price:4400, flavorDefault:['nutty']},
   {no:16,cat:'커피',  name:'바닐라모카 (HOT/ICE)',              powder:'초코파우더', syrup:'바닐라',     cup:'-', price:4400, flavorDefault:['nutty']},
   {no:17,cat:'커피',  name:'스위트 허니 라떼 (HOT/ICE)',        powder:'밀크파우더', syrup:'허니',       cup:'-', price:4400, flavorDefault:['nutty']},
-  {no:18,cat:'커피',  name:'연유라떼 (HOT/ICE)',                powder:'밀크파우더', syrup:'커피베이스', cup:'-', price:3900, flavor:'none'},
+  {no:18,cat:'커피',  name:'흑당라떼 (HOT/ICE)',                powder:'밀크파우더', syrup:'커피베이스', cup:'-', price:3400, flavor:'none'},
   {no:19,cat:'논커피',name:'밀크티 (HOT/ICE)',                  powder:'밀크파우더', syrup:'블랙티',     cup:'-', price:4200},
   {no:20,cat:'논커피',name:'초코 라떼 (HOT/ICE)',               powder:'초코파우더', syrup:'-',          cup:'-', price:4200},
   {no:21,cat:'논커피',name:'바닐라 밀크 (HOT/ICE)',             powder:'밀크파우더', syrup:'바닐라',     cup:'-', price:4000},
@@ -652,85 +655,165 @@ function renderFind(ver) {
   }).join('');
 }
 
-// ── 엑셀 저장 ──
-function printMenuList(ver) {
+// ── 공통: 메뉴 데이터 준비 ──
+function getMenuData(ver) {
   const ps=[...STATE.selP[ver]];
   const ss=[...STATE.selS[ver]];
   const noCup = ver==='v35';
   const cs = noCup ? [] : getCupSelected(ver);
   const hasAny = ps.length>0 || ss.length>0 || (!noCup && cs.length>0);
-  if(!hasAny){ alert('파우더 또는 시럽을 먼저 선택해주세요.'); return; }
-
+  if(!hasAny){ alert('파우더 또는 시럽을 먼저 선택해주세요.'); return null; }
   const avail = STATE.menus.filter(m=>{
     if(noCup && m.cup!=='-') return false;
     if(noCup && m.cat==='티') return false;
     return canMake(m,ps,ss,cs);
   });
-  if(!avail.length){ alert('선택된 조합으로 만들 수 있는 메뉴가 없습니다.'); return; }
-
+  if(!avail.length){ alert('선택된 조합으로 만들 수 있는 메뉴가 없습니다.'); return null; }
   const verLabel = ver==='v35'?'바리스브루 (기본)': ver==='vadd'?'바리스브루 (추가)':'바리스브루 V4.0';
   const now = new Date();
   const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-  const powderStr = ps.length ? ps.join(', ') : '-';
-  const syrupStr  = ss.length ? ss.join(', ') : '-';
-  const cupStr    = cs.length ? cs.join(', ') : '-';
+  const dateLabel = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
+  return { ps, ss, cs, noCup, avail, verLabel, dateStr, dateLabel,
+    powderStr: ps.join(', ')||'-', syrupStr: ss.join(', ')||'-', cupStr: cs.join(', ')||'-' };
+}
 
-  // SheetJS로 엑셀 생성
+// ── 엑셀 저장 ──
+function saveExcel(ver) {
+  const d = getMenuData(ver); if(!d) return;
+  const { ps, ss, cs, noCup, avail, verLabel, dateStr, dateLabel, powderStr, syrupStr, cupStr } = d;
+
   const script = document.createElement('script');
   script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
   script.onload = () => {
     const wb = XLSX.utils.book_new();
 
-    // ── 재료 정보 시트 ──
+    // 요약 시트
     const infoRows = [
-      ['바리스브루 메뉴 목록'],
-      [verLabel],
-      [],
-      ['파우더', powderStr],
-      ['시럽',   syrupStr],
+      ['바리스브루 메뉴 목록'], [verLabel], [`날짜: ${dateLabel}`], [],
+      ['파우더', powderStr], ['시럽', syrupStr],
     ];
     if(!noCup) infoRows.push(['컵', cupStr]);
-    infoRows.push([]);
-    infoRows.push([`총 ${avail.length}개 메뉴 제공 가능`]);
+    infoRows.push([], [`총 ${avail.length}개 메뉴`]);
     const wsInfo = XLSX.utils.aoa_to_sheet(infoRows);
     wsInfo['!cols'] = [{wch:14},{wch:50}];
     XLSX.utils.book_append_sheet(wb, wsInfo, '요약');
 
-    // ── 메뉴 목록 시트 ──
+    // 메뉴 목록 시트
     const cats = noCup ? ['커피','논커피'] : ['커피','논커피','티'];
-    const headers = ['No.','카테고리','메뉴명','파우더','시럽', ...(noCup?[]:['컵']), '맛 특성','가격(원)'];
-    const menuRows = [headers];
-
+    const headers = ['No.','카테고리','메뉴명','파우더','시럽',...(noCup?[]:['컵']),'맛 특성','가격(원)'];
+    const rows = [headers];
     cats.forEach(cat=>{
-      const items = avail.filter(m=>m.cat===cat);
-      items.forEach(m=>{
-        const flavorState = STATE.flavors[m.no];
+      avail.filter(m=>m.cat===cat).forEach(m=>{
+        const fs = STATE.flavors[m.no];
         const flavors=[];
-        if(flavorState&&flavorState.has('acidity')) flavors.push('산미');
-        if(flavorState&&flavorState.has('nutty'))   flavors.push('고소');
-        const row = [
+        if(fs&&fs.has('acidity')) flavors.push('산미');
+        if(fs&&fs.has('nutty'))   flavors.push('고소');
+        rows.push([
           m.no, m.cat, m.name,
           m.powder==='-'?'':m.powder,
           m.syrup ==='-'?'':m.syrup,
-          ...(noCup ? [] : [m.cup==='-'?'':m.cup]),
+          ...(noCup?[]:[m.cup==='-'?'':m.cup]),
           flavors.join(', '),
           getPrice(m)||''
-        ];
-        menuRows.push(row);
+        ]);
       });
     });
-
-    const wsMenu = XLSX.utils.aoa_to_sheet(menuRows);
-    wsMenu['!cols'] = [
-      {wch:6},{wch:9},{wch:32},{wch:14},{wch:12},
-      ...(noCup?[]:[{wch:14}]),
-      {wch:10},{wch:10}
-    ];
+    const wsMenu = XLSX.utils.aoa_to_sheet(rows);
+    wsMenu['!cols'] = [{wch:6},{wch:9},{wch:32},{wch:14},{wch:12},...(noCup?[]:[{wch:14}]),{wch:10},{wch:10}];
     XLSX.utils.book_append_sheet(wb, wsMenu, '메뉴목록');
-
     XLSX.writeFile(wb, `바리스브루_메뉴목록_${dateStr}.xlsx`);
   };
   document.head.appendChild(script);
+}
+
+// ── JPG 저장 ──
+function saveJpg(ver) {
+  const d = getMenuData(ver); if(!d) return;
+  const { noCup, avail, verLabel, dateStr, dateLabel, powderStr, syrupStr, cupStr } = d;
+
+  const cats = noCup ? ['커피','논커피'] : ['커피','논커피','티'];
+  const menuSections = cats.map(cat=>{
+    const items = avail.filter(m=>m.cat===cat);
+    if(!items.length) return '';
+    const catLabel = cat==='커피'?'☕ 커피':cat==='논커피'?'🥛 논커피':'🍵 티';
+    const rows = items.map(m=>{
+      const fs=STATE.flavors[m.no]; const flavors=[];
+      if(fs&&fs.has('acidity')) flavors.push('산미');
+      if(fs&&fs.has('nutty'))   flavors.push('고소');
+      const badges = flavors.map(f=>`<span style="font-size:10px;padding:2px 6px;border-radius:99px;background:${f==='산미'?'#FFF3E0':'#EFEBE9'};color:${f==='산미'?'#B5600A':'#4E342E'};font-weight:700;margin-left:4px">${f}</span>`).join('');
+      const ingr=[];
+      if(m.powder!=='-') ingr.push(`<span style="color:#2E7D32">${m.powder}</span>`);
+      if(m.syrup !=='-') ingr.push(`<span style="color:#856910">${m.syrup}</span>`);
+      if(m.cup   !=='-') ingr.push(`<span style="color:#6A1B9A">${m.cup}</span>`);
+      const pv=getPrice(m);
+      return `<tr>
+        <td style="padding:6px 10px;border-bottom:1px solid #F0E6D3;color:#8D7060;font-size:11px;width:26px">${m.no}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #F0E6D3;font-weight:500">${m.name}${badges}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #F0E6D3;font-size:11px;color:#666">${ingr.join(' + ')}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #F0E6D3;text-align:right;font-weight:700;color:#6D4C41;white-space:nowrap;width:60px">${pv>0?pv.toLocaleString()+'원':''}</td>
+      </tr>`;
+    }).join('');
+    return `<div style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:700;color:#3E2723;padding:5px 10px;background:#F0E6D3;border-radius:6px;margin-bottom:3px">${catLabel} (${items.length}종)</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">${rows}</table>
+    </div>`;
+  }).join('');
+
+  const cupSection = noCup?'':
+    `<div><div style="font-size:10px;color:#8D7060;margin-bottom:3px">컵</div><div style="font-size:12px;font-weight:500;color:#6A1B9A">${cupStr}</div></div>`;
+
+  const html=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
+  <title>바리스브루 메뉴</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Noto Sans KR',sans-serif;color:#2C1A12;background:#f0f0f0}
+    #capture{padding:26px 28px;max-width:600px;margin:0 auto;background:#fff}
+    .btn-bar{display:flex;gap:10px;justify-content:center;padding:14px;background:#f9f9f9;border-top:1px solid #eee;max-width:600px;margin:0 auto}
+    button{padding:9px 22px;border:none;border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer;font-weight:700}
+    .btn-save{background:#3E2723;color:#fff}
+    .btn-close{background:#ddd;color:#555}
+    #loading{display:none;text-align:center;padding:16px;font-size:13px;color:#888}
+  </style></head><body>
+  <div id="capture">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #3E2723">
+      <div>
+        <div style="font-size:16px;font-weight:700;color:#3E2723">☕ 바리스브루 메뉴 목록</div>
+        <div style="font-size:11px;color:#8D7060;margin-top:2px">${verLabel} · ${dateLabel}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr${noCup?'':' 1fr'};gap:10px;margin-bottom:16px;background:#FAF6F0;border-radius:8px;padding:10px 14px">
+      <div><div style="font-size:10px;color:#8D7060;margin-bottom:2px">파우더</div><div style="font-size:11px;font-weight:500;color:#2E7D32">${powderStr}</div></div>
+      <div><div style="font-size:10px;color:#8D7060;margin-bottom:2px">시럽</div><div style="font-size:11px;font-weight:500;color:#856910">${syrupStr}</div></div>
+      ${cupSection}
+    </div>
+    <div style="font-size:11px;color:#8D7060;margin-bottom:10px">총 ${avail.length}개 메뉴 제공 가능</div>
+    ${menuSections}
+  </div>
+  <div class="btn-bar">
+    <button class="btn-save" onclick="doSave()">💾 JPG 저장</button>
+    <button class="btn-close" onclick="window.close()">닫기</button>
+  </div>
+  <div id="loading">이미지 생성 중...</div>
+  <script>
+  function doSave(){
+    document.getElementById('loading').style.display='block';
+    document.querySelector('.btn-bar').style.display='none';
+    html2canvas(document.getElementById('capture'),{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false}).then(canvas=>{
+      document.getElementById('loading').style.display='none';
+      document.querySelector('.btn-bar').style.display='flex';
+      const a=document.createElement('a');
+      a.download='바리스브루_메뉴목록_${dateStr}.jpg';
+      a.href=canvas.toDataURL('image/jpeg',0.95);
+      a.click();
+    });
+  }
+  <\/script>
+  </body></html>`;
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
 }
 
 // ── 메뉴선택 재료찾기 ──
